@@ -135,11 +135,7 @@ void CExternLightControlVIT::ProcessPacket(string recieve)
 			m_arrLampOn[i + 8] = bOn;
 		}
 
-		strComm = strComm.Left(3);
-		strComm += _T(" ");
-		strComm += ByteToBitString(nChannelHigh);
-		strComm += _T(" ");
-		strComm += ByteToBitString(nChannelLow);
+		strComm = BufferToStatusString((LPBYTE)recieve.c_str(), nChannelHigh, nChannelLow);
 	}
 
 	CString* pMsg = new CString;
@@ -227,12 +223,6 @@ void CExternLightControlVIT::LightOnOff(int nChannel, BOOL bOn)
 		SetSingleLightTurnOff(OutBuf, nChannel);
 	
 	m_serial.Send(OutBuf, BUFFER_SIZE);
-
-	if (m_pL2M)
-	{
-		CString strMsg((LPCSTR)OutBuf, 5);
-		m_pL2M->SendCommand(strMsg);
-	}
 }
 
 void CExternLightControlVIT::LightOnOff(vector<int> vcChannel, BOOL bOn)
@@ -268,8 +258,7 @@ void CExternLightControlVIT::LightOnOff(vector<int> vcChannel, BOOL bOn)
 
 	if (m_pL2M)
 	{
-		CString strMsg((LPCSTR)OutBuf, 3);
-		strMsg.Format(_T("%s %s %s"), strMsg, ByteToBitString(dataHight), ByteToBitString(dataLow));
+		CString strMsg = BufferToStatusString(OutBuf, dataHight, dataLow);
 		m_pL2M->SendCommand(strMsg);
 	}
 }
@@ -376,19 +365,26 @@ int CExternLightControlVIT::SetSingleLightTurnOn(LPBYTE lpBuffer, int nChannel)
 	int nSize = 0;
 	BYTE nCommandChannel = 0;
 
+	CString strMsg;
+
 	if(nChannel > 8)
 	{
 		nChannel = nChannel%9;
 		nCommandChannel = 1 << (nChannel-1);
-
 		nSize = MakeInstruction(lpBuffer, COMMAND_O, COMMAND_N, COMMAND_N, nCommandChannel, 0);
+
+		strMsg = BufferToStatusString(lpBuffer, nCommandChannel, 0);
 	}
 	else
 	{
 		nCommandChannel = 1 << (nChannel-1);
-
 		nSize = MakeInstruction(lpBuffer, COMMAND_O, COMMAND_N, COMMAND_N, 0, nCommandChannel);
+
+		strMsg = BufferToStatusString(lpBuffer, 0, nCommandChannel);
 	}
+
+	if (m_pL2M)
+		m_pL2M->SendCommand(strMsg);
 
 	return nSize;
 }
@@ -398,19 +394,26 @@ int CExternLightControlVIT::SetSingleLightTurnOff(LPBYTE lpBuffer, int nChannel)
 	int nSize = 0;
 	BYTE nCommandChannel = 0;
 
+	CString strMsg;
+
 	if(nChannel > 8)
 	{
 		nChannel = nChannel%9;
 		nCommandChannel = 0 << (nChannel-1);
-
 		nSize = MakeInstruction(lpBuffer, COMMAND_O, COMMAND_F, COMMAND_F, nCommandChannel, 0);
+
+		strMsg = BufferToStatusString(lpBuffer, nCommandChannel, 0);
 	}
 	else
 	{
 		nCommandChannel = 0 << (nChannel-1);
-
 		nSize = MakeInstruction(lpBuffer, COMMAND_O, COMMAND_F, COMMAND_F, 0, nCommandChannel);
+
+		strMsg = BufferToStatusString(lpBuffer, 0, nCommandChannel);
 	}
+
+	if (m_pL2M)
+		m_pL2M->SendCommand(strMsg);
 
 	return nSize;
 }
@@ -547,4 +550,15 @@ CString CExternLightControlVIT::ByteToBitString(BYTE data)
 		str += (data & (1 << i)) ? _T('1') : _T('0');
 	}
 	return str;
+}
+
+CString CExternLightControlVIT::BufferToStatusString(LPBYTE lpBuffer, BYTE dataHigh, BYTE dataLow)
+{
+	CString strMsg((LPCSTR)lpBuffer, 3);
+	strMsg += _T(" ");
+	strMsg += ByteToBitString(dataHigh);
+	strMsg += _T(" ");
+	strMsg += ByteToBitString(dataLow);
+
+	return strMsg;
 }

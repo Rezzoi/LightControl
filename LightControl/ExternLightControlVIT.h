@@ -44,6 +44,7 @@ protected:
 	int					MakeInstructionValue(LPBYTE lpBuffer, int nCommand, int nFirst, int nSecond, int nThird, int nFourth);
 	int					MakeInstruction(LPBYTE lpBuffer, int nCommand, int nFirst, int nSecond, int nThird, int nFourth);
 	CString				ByteToBitString(BYTE data);
+	CString				BufferToStatusString(LPBYTE lpBuffer, BYTE dataHigh, BYTE dataLow);
 
 protected:
 	//BYTE				m_lpReadBuffer[10];
