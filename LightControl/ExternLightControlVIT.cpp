@@ -100,12 +100,9 @@ void CExternLightControlVIT::ProcessPacket(string recieve)
 {
 	CString strComm(recieve.c_str(), 5);
 
-	TRACE(_T("Recieve packet data %s"), strComm);
-
 	int nSize = recieve.size();
 	if (nSize <= 0)
 	{
-		TRACE(_T("Recieve packet size is 0.\n"));
 		return;
 	}
 
