@@ -41,6 +41,12 @@ BOOL CSerial::Open(CString strPort, int nBaudrate)
 	dcb.ByteSize = 8;
 	dcb.Parity = NOPARITY;
 	dcb.StopBits = ONESTOPBIT;
+	dcb.fOutxCtsFlow = FALSE;
+	dcb.fOutxDsrFlow = FALSE;
+	dcb.fDtrControl = DTR_CONTROL_DISABLE;
+	dcb.fRtsControl = RTS_CONTROL_DISABLE;
+	dcb.fOutX = FALSE;
+	dcb.fInX = FALSE;
 	SetCommState(m_hComm, &dcb);
 	SetCommMask(m_hComm, EV_RXCHAR);
 
@@ -49,7 +55,7 @@ BOOL CSerial::Open(CString strPort, int nBaudrate)
 	timeouts.ReadTotalTimeoutConstant = 100;
 	timeouts.ReadTotalTimeoutMultiplier = 100;
 	timeouts.WriteTotalTimeoutConstant = 100;
-	timeouts.WriteTotalTimeoutMultiplier = 5000;
+	timeouts.WriteTotalTimeoutMultiplier = 0;
 	SetCommTimeouts(m_hComm, &timeouts);
 
 	m_pThread = AfxBeginThread(RecvThread, this);
@@ -72,6 +78,11 @@ void CSerial::Close()
 BOOL CSerial::Send(const void* pData, int nSize)
 {
 	DWORD written = 0;
+
+	COMSTAT stat;
+	DWORD err;
+	ClearCommError(m_hComm, &err, &stat);
+	TRACE(_T("[Before] OutQueue: %d\n"), stat.cbOutQue);
 
 	BOOL bResult = WriteFile(m_hComm, pData, nSize, &written, NULL);
 	if (!bResult)
