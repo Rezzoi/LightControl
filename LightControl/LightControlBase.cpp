@@ -19,7 +19,7 @@ CLightControlBase::~CLightControlBase()
 
 BOOL CLightControlBase::OpenControl(CString strPort, DWORD dwBaudrate)
 {
-	if (m_serial.IsRunning())
+	if (m_serial.IsOpened())
 		m_serial.Close();
 
 	return m_serial.Open(strPort);
@@ -37,5 +37,5 @@ void CLightControlBase::SetParentWnd(CWnd* pParent)
 
 BOOL CLightControlBase::IsConnect()
 {
-	return m_serial.IsRunning();
+	return m_serial.IsOpened();
 }

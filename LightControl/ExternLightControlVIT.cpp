@@ -84,7 +84,7 @@ BOOL CExternLightControlVIT::GetLightOnStatus( int nChannel )
 
 BOOL CExternLightControlVIT::IsUsingLightLamp( int nChannel )
 {
-	if (!m_serial.IsRunning())
+	if (!m_serial.IsOpened())
 		return FALSE;
 
 	if (!m_arrLampOn[nChannel])
@@ -190,7 +190,7 @@ BOOL CExternLightControlVIT::Initialize()
 
 BOOL CExternLightControlVIT::SetFanAlarmOnOff(BOOL bOnOff)
 {
-	if(!m_serial.IsRunning())
+	if(!m_serial.IsOpened())
 		return FALSE;
 		
 	BYTE OutBuf[10];
@@ -206,7 +206,7 @@ BOOL CExternLightControlVIT::SetFanAlarmOnOff(BOOL bOnOff)
 
 BOOL CExternLightControlVIT::SetTemperatureAlarmOnOff(BOOL bOnOff)
 {
-	if(!m_serial.IsRunning())
+	if(!m_serial.IsOpened())
 		return FALSE;
 
 	BYTE OutBuf[10];
@@ -305,7 +305,7 @@ void CExternLightControlVIT::RequestOnOff()
 
 BOOL CExternLightControlVIT::Reset()
 {
-	if(!m_serial.IsRunning())
+	if(!m_serial.IsOpened())
 		return FALSE;
 
 	BYTE OutBuf[10];
@@ -450,7 +450,7 @@ BOOL CExternLightControlVIT::SetGroupOnOff(int nGroup, BOOL bOnOff)
 	if( nGroup < 1 || nGroup > 4 )
 		return FALSE;
 
-	if( !m_serial.IsRunning() )
+	if( !m_serial.IsOpened() )
 		return FALSE;
 
 	BYTE OutBuf[10];
@@ -485,7 +485,7 @@ BOOL CExternLightControlVIT::SetGroupLightValue(int nGroup, int nValue)
 	int nTens		= (nValue / 10) % 10;	// 십의 자리
 	int nUnits		= nValue % 10;			// 일의 자리
 
-	if(!m_serial.IsRunning())
+	if(!m_serial.IsOpened())
 		return FALSE;
 
 	BYTE OutBuf[10];

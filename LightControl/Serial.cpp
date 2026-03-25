@@ -6,11 +6,13 @@
 #endif
 
 CSerial::CSerial()
-	:m_pThread(nullptr)
-	, m_running(false)
-	, m_pS2L(nullptr)
+	: m_pS2L(nullptr)
 {
 	m_hComm = INVALID_HANDLE_VALUE;
+	m_bOpened = FALSE;
+
+	ZeroMemory(&m_ovRead, sizeof(OVERLAPPED));
+	ZeroMemory(&m_ovWrite, sizeof(OVERLAPPED));
 	m_token = "\r\n";
 }
 
@@ -19,130 +21,199 @@ CSerial::~CSerial()
 	Close();
 }
 
-BOOL CSerial::Open(CString strPort, int nBaudrate)
+void CSerial::InitOverlapped()
 {
-	m_hComm = CreateFile(strPort,
-		GENERIC_READ | GENERIC_WRITE,
-		0,
-		NULL,
-		OPEN_EXISTING,
-		0,
-		NULL);
+    m_ovRead.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+    m_ovWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+}
 
-	if (m_hComm == INVALID_HANDLE_VALUE)
-		return FALSE;
+BOOL CSerial::Open(const CString& strPort, DWORD baudRate)
+{
+    if (m_bOpened)
+        return TRUE;
 
-	TRACE(_T("Serial port open success\n"));
+    CString strComm;
+    strComm.Format(_T("\\\\.\\%s"), strPort);
 
-	DCB dcb;
-	GetCommState(m_hComm, &dcb);
+    m_hComm = CreateFile(
+        strComm,
+        GENERIC_READ | GENERIC_WRITE,
+        0,
+        NULL,
+        OPEN_EXISTING,
+        FILE_FLAG_OVERLAPPED,
+        NULL
+    );
 
-	dcb.BaudRate = nBaudrate;
-	dcb.ByteSize = 8;
-	dcb.Parity = NOPARITY;
-	dcb.StopBits = ONESTOPBIT;
-	dcb.fOutxCtsFlow = FALSE;
-	dcb.fOutxDsrFlow = FALSE;
-	dcb.fDtrControl = DTR_CONTROL_DISABLE;
-	dcb.fRtsControl = RTS_CONTROL_DISABLE;
-	dcb.fOutX = FALSE;
-	dcb.fInX = FALSE;
-	SetCommState(m_hComm, &dcb);
-	SetCommMask(m_hComm, EV_RXCHAR);
+    if (m_hComm == INVALID_HANDLE_VALUE)
+        return FALSE;
 
-	COMMTIMEOUTS timeouts = { 0 };
-	timeouts.ReadIntervalTimeout = 0xFFFFFFFF;
-	timeouts.ReadTotalTimeoutConstant = 100;
-	timeouts.ReadTotalTimeoutMultiplier = 100;
-	timeouts.WriteTotalTimeoutConstant = 100;
-	timeouts.WriteTotalTimeoutMultiplier = 0;
-	SetCommTimeouts(m_hComm, &timeouts);
+    InitOverlapped();
 
-	m_pThread = AfxBeginThread(RecvThread, this);
+    SetupComm(m_hComm, 4096, 4096);
 
-	m_running = true;
+    DCB dcb = { 0 };
+    dcb.DCBlength = sizeof(DCB);
 
-	return TRUE;
+    GetCommState(m_hComm, &dcb);
+
+    dcb.BaudRate = baudRate;
+    dcb.ByteSize = 8;
+    dcb.Parity = NOPARITY;
+    dcb.StopBits = ONESTOPBIT;
+
+    SetCommState(m_hComm, &dcb);
+
+    COMMTIMEOUTS timeouts = { 0 };
+    SetCommTimeouts(m_hComm, &timeouts);
+
+    PurgeComm(m_hComm, PURGE_RXCLEAR | PURGE_TXCLEAR);
+
+    AfxBeginThread(RecvThread, this);
+
+    m_bOpened = TRUE;
+    return TRUE;
 }
 
 void CSerial::Close()
 {
-	if (m_hComm != INVALID_HANDLE_VALUE)
-	{
-		CloseHandle(m_hComm);
-		m_hComm = INVALID_HANDLE_VALUE;
-		m_running = false;
-	}
+    if (!m_bOpened)
+        return;
+
+    CloseHandle(m_ovRead.hEvent);
+    CloseHandle(m_ovWrite.hEvent);
+
+    CloseHandle(m_hComm);
+
+    m_hComm = INVALID_HANDLE_VALUE;
+    m_bOpened = FALSE;
 }
 
-BOOL CSerial::Send(const void* pData, int nSize)
+BOOL CSerial::Send(const BYTE* pData, DWORD size, DWORD timeout)
 {
-	DWORD written = 0;
+    if (!m_bOpened)
+        return FALSE;
 
-	COMSTAT stat;
-	DWORD err;
-	ClearCommError(m_hComm, &err, &stat);
-	TRACE(_T("[Before] OutQueue: %d\n"), stat.cbOutQue);
+    DWORD dwWritten = 0;
 
-	BOOL bResult = WriteFile(m_hComm, pData, nSize, &written, NULL);
-	if (!bResult)
-	{
-		CString str((LPCSTR)pData, nSize);
-		TRACE(_T("Write file failed. Data:%s\n"), str);
-	}
+    ResetEvent(m_ovWrite.hEvent);
 
-	return written == nSize;
+    BOOL bRet = WriteFile(
+        m_hComm,
+        pData,
+        size,
+        &dwWritten,
+        &m_ovWrite
+    );
+
+    if (!bRet)
+    {
+        if (GetLastError() == ERROR_IO_PENDING)
+        {
+            DWORD dwWait = WaitForSingleObject(m_ovWrite.hEvent, timeout);
+            if (dwWait == WAIT_OBJECT_0)
+            {
+                GetOverlappedResult(m_hComm, &m_ovWrite, &dwWritten, FALSE);
+                return size == dwWritten;
+            }
+            return FALSE;
+        }
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
-void CSerial::SetToken(const std::string& token)
+int CSerial::Read(BYTE* pBuffer, DWORD bufferSize, DWORD timeout)
 {
-	m_token = token;
-}
+    if (!m_bOpened)
+        return 0;
 
-void CSerial::SetInterface(ISerial2Lamp* pS2L)
-{
-	m_pS2L = pS2L;
+    DWORD dwError = 0;
+    COMSTAT stat = { 0 };
+
+    ClearCommError(m_hComm, &dwError, &stat);
+
+    if (stat.cbInQue == 0)
+        return 0;
+
+    DWORD toRead = min(stat.cbInQue, bufferSize);
+    DWORD dwRead = 0;
+
+    ResetEvent(m_ovRead.hEvent);
+
+    BOOL bRet = ReadFile(
+        m_hComm,
+        pBuffer,
+        toRead,
+        &dwRead,
+        &m_ovRead
+    );
+
+    if (!bRet)
+    {
+        if (GetLastError() == ERROR_IO_PENDING)
+        {
+            DWORD dwWait = WaitForSingleObject(m_ovRead.hEvent, timeout);
+            if (dwWait == WAIT_OBJECT_0)
+            {
+                if (GetOverlappedResult(m_hComm, &m_ovRead, &dwRead, FALSE))
+                    return (int)dwRead;
+            }
+            return 0;
+        }
+        return 0;
+    }
+
+    return (int)dwRead;
 }
 
 UINT CSerial::RecvThread(LPVOID pParam)
 {
-	CSerial* p = (CSerial*)pParam;
+    CSerial* pSerial = (CSerial*)pParam;
+ 
+    BYTE buf[1024];
 
-	BYTE buffer[1024] = { 0 };
-	DWORD read = 0;
-	DWORD event = 0;
+    while (pSerial->IsOpened())
+    {
+        int n = pSerial->Read(buf, sizeof(buf));
 
-	while (p->m_running)
-	{
-		WaitCommEvent(p->m_hComm, &event, NULL);
+        if (n > 0)
+        {
+            CString str((LPCSTR)buf, n);
+            TRACE(_T("Read file: Buffer:%s, Size:%d\n"), str, n);
+            pSerial->ProcessRecv(buf, n);
+        }
 
-		if (event & EV_RXCHAR)
-		{
-			if (ReadFile(p->m_hComm, buffer, sizeof(buffer), &read, NULL))
-			{
-				CString str((LPCSTR)buffer, read);
-				TRACE(_T("Read file: Buffer:%s, Size:%d\n"), str, read);
-				if (read > 0)
-					p->ProcessRecv(buffer, read);
-			}
-		}
-	}
+        Sleep(1);
+    }
 
-	return 0;
+    return 0;
 }
 
 void CSerial::ProcessRecv(const BYTE* data, DWORD size)
 {
-	m_recvBuffer.append((const char*)data, size);
+    m_recvBuffer.append((const char*)data, size);
 
-	size_t pos;
+    size_t pos = m_recvBuffer.find(m_token);
 
-	while ((pos = m_recvBuffer.find(m_token)) != string::npos)
-	{
-		string packet = m_recvBuffer.substr(0, pos);
-		m_recvBuffer.erase(0, pos + m_token.length());
+    if (pos == -1)
+    {
+        m_recvBuffer.clear();
+        return;
+    }
 
-		if (m_pS2L)
-			m_pS2L->ProcessPacket(packet);
-	}
+    while (pos != -1)
+    {
+        string packet = m_recvBuffer.substr(0, pos);
+        m_recvBuffer.erase(0, pos + m_token.length());
+
+        if (m_pS2L)
+            m_pS2L->ProcessPacket(packet);
+    }
+}
+
+void CSerial::SetInterface(ISerial2Lamp* pS2L)
+{
+    m_pS2L = pS2L;
 }

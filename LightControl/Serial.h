@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <string>
 #include <queue>
 #include <mutex>
@@ -16,24 +16,27 @@ public:
     CSerial();
     ~CSerial();
 
-    BOOL Open(CString strPort, int nBaudrate = 9600);
+public:
+    BOOL Open(const CString& strPort, DWORD baudRate = CBR_9600);
     void Close();
-    BOOL Send(const void* pData, int nSize);
-    void SetToken(const std::string& token);
-    BOOL IsRunning() { return m_running; }
+
+    BOOL Send(const BYTE* pData, DWORD size, DWORD timeout = 3000);
+    int  Read(BYTE* pBuffer, DWORD bufferSize, DWORD timeout = 3000);
+
+    BOOL IsOpened() const { return m_bOpened; }
     void SetInterface(ISerial2Lamp* pS2L);
 
 protected:
     static UINT RecvThread(LPVOID pParam);
+    void InitOverlapped();
     void ProcessRecv(const BYTE* data, DWORD size);
 
 private:
-    ISerial2Lamp* m_pS2L;
     HANDLE m_hComm;
-    CWinThread* m_pThread;
-    string m_recvBuffer;
+    BOOL   m_bOpened;
+    OVERLAPPED m_ovRead;
+    OVERLAPPED m_ovWrite;
+    ISerial2Lamp* m_pS2L;
     string m_token;
-    mutex m_mutex;
-    bool m_running;
+    string m_recvBuffer;
 };
-
