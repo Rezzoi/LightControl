@@ -165,6 +165,9 @@ int CSerial::Read(BYTE* pBuffer, DWORD bufferSize, DWORD timeout)
         return 0;
     }
 
+    CString str((LPCSTR)pBuffer, dwRead);
+    TRACE(_T("Read file: Buffer:%s, Size:%d\n"), str, dwRead);
+
     return (int)dwRead;
 }
 
@@ -179,11 +182,7 @@ UINT CSerial::RecvThread(LPVOID pParam)
         int n = pSerial->Read(buf, sizeof(buf));
 
         if (n > 0)
-        {
-            CString str((LPCSTR)buf, n);
-            TRACE(_T("Read file: Buffer:%s, Size:%d\n"), str, n);
             pSerial->ProcessRecv(buf, n);
-        }
 
         Sleep(1);
     }
@@ -196,12 +195,6 @@ void CSerial::ProcessRecv(const BYTE* data, DWORD size)
     m_recvBuffer.append((const char*)data, size);
 
     size_t pos = m_recvBuffer.find(m_token);
-
-    if (pos == -1)
-    {
-        m_recvBuffer.clear();
-        return;
-    }
 
     while (pos != -1)
     {
