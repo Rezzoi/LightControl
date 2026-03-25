@@ -621,8 +621,6 @@ LRESULT CLightControlDlg::OnRecieve(WPARAM wParam, LPARAM lParam)
 		pMsg = nullptr;
 	}
 
-	TRACE(_T("Main recieve message %s.\n"), strMsg);
-
 	strMsg.Format(_T("Controler ---> PC : %s"), strMsg);
 	AddMessage(strMsg);
 

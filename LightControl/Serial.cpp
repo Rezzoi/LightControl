@@ -194,10 +194,9 @@ void CSerial::ProcessRecv(const BYTE* data, DWORD size)
 {
     m_recvBuffer.append((const char*)data, size);
 
-    size_t pos = m_recvBuffer.find(m_token);
-
-    while (pos != -1)
+    while (m_recvBuffer.find(m_token) != -1)
     {
+        size_t pos = m_recvBuffer.find(m_token);
         string packet = m_recvBuffer.substr(0, pos);
         m_recvBuffer.erase(0, pos + m_token.length());
 
