@@ -399,14 +399,14 @@ int CExternLightControlVIT::SetSingleLightTurnOff(LPBYTE lpBuffer, int nChannel)
 	if(nChannel > 8)
 	{
 		nChannel = nChannel%9;
-		nCommandChannel = 0 << (nChannel-1);
+		nCommandChannel = 1 << (nChannel-1);
 		nSize = MakeInstruction(lpBuffer, COMMAND_O, COMMAND_F, COMMAND_F, nCommandChannel, 0);
 
 		strMsg = BufferToStatusString(lpBuffer, nCommandChannel, 0);
 	}
 	else
 	{
-		nCommandChannel = 0 << (nChannel-1);
+		nCommandChannel = 1 << (nChannel-1);
 		nSize = MakeInstruction(lpBuffer, COMMAND_O, COMMAND_F, COMMAND_F, 0, nCommandChannel);
 
 		strMsg = BufferToStatusString(lpBuffer, 0, nCommandChannel);
