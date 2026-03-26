@@ -233,18 +233,17 @@ void CExternLightControlVIT::LightOnOff(vector<int> vcChannel, BOOL bOn)
 	for (int i = 0; i < vcChannel.size(); i++)
 	{
 		int nChannel = vcChannel[i];
-		int nBit = nChannel - 1;
-		if (nBit < 0)
-			return;
 
-		if (nChannel > 8)
+		if (nChannel >= 1 && nChannel <= 8)
 		{
-			dataHight |= (1 << nBit);
+			dataLow |= (1 << (nChannel - 1));
+		}
+		else if (nChannel >= 9 && nChannel <= 16)
+		{
+			dataHight |= (1 << (nChannel % 9));
 		}
 		else
-		{
-			dataLow |= (1 << nBit);
-		}
+			return;
 	}
 
 	BYTE OutBuf[10] = { 0 };
@@ -341,9 +340,9 @@ int CExternLightControlVIT::SetSingleLightTurn(LPBYTE lpBuffer, int nChannel, BO
 		nChannel = nChannel%9;
 
 		if( bOnOff )
-			nCommandChannel = 1 << (nChannel-1);
+			nCommandChannel = 1 << (nChannel);
 		else
-			nCommandChannel = 0 << (nChannel-1);
+			nCommandChannel = 0 << (nChannel);
 
 		nSize = MakeInstruction(lpBuffer, COMMAND_O, COMMAND_N, COMMAND_F, nCommandChannel, 0);
 	}
@@ -370,7 +369,7 @@ int CExternLightControlVIT::SetSingleLightTurnOn(LPBYTE lpBuffer, int nChannel)
 	if(nChannel > 8)
 	{
 		nChannel = nChannel%9;
-		nCommandChannel = 1 << (nChannel-1);
+		nCommandChannel = 1 << (nChannel);
 		nSize = MakeInstruction(lpBuffer, COMMAND_O, COMMAND_N, COMMAND_N, nCommandChannel, 0);
 
 		strMsg = BufferToStatusString(lpBuffer, nCommandChannel, 0);
@@ -399,7 +398,7 @@ int CExternLightControlVIT::SetSingleLightTurnOff(LPBYTE lpBuffer, int nChannel)
 	if(nChannel > 8)
 	{
 		nChannel = nChannel%9;
-		nCommandChannel = 1 << (nChannel-1);
+		nCommandChannel = 1 << (nChannel);
 		nSize = MakeInstruction(lpBuffer, COMMAND_O, COMMAND_F, COMMAND_F, nCommandChannel, 0);
 
 		strMsg = BufferToStatusString(lpBuffer, nCommandChannel, 0);
