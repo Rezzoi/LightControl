@@ -27,11 +27,13 @@ char cInt2Hex[17] = { 0x30, 0x31, 0x32, 0x33, 0x34,
 
 
 CExternLightControlVIT::CExternLightControlVIT(void)
-	:m_nResvLightValue(0),
-	m_nStartIdx(0),
-	m_nRecvIdx(0),
-	m_nTemperature(0),
-	m_bAlarmLampOff(0)
+	:m_nResvLightValue(0)
+	, m_nStartIdx(0)
+	, m_nRecvIdx(0)
+	, m_nTemperature(0)
+	, m_bAlarmLampOff(0)
+	, m_evtStatus(FALSE, FALSE)
+	, m_evtExit(FALSE, FALSE)
 {
 	m_bCtrlTurnOn = FALSE;
 }
@@ -46,6 +48,11 @@ BOOL CExternLightControlVIT::OpenControl(CString strPort, DWORD dwBaudrate)
 	if (CLightControlBase::OpenControl(strPort))
 	{
 		m_serial.SetInterface(static_cast<ISerial2Lamp*>(this));
+
+
+
+
+
 		return TRUE;
 	}
 
@@ -560,4 +567,46 @@ CString CExternLightControlVIT::BufferToStatusString(LPBYTE lpBuffer, BYTE dataH
 	strMsg += ByteToBitString(dataLow);
 
 	return strMsg;
+}
+
+UINT CExternLightControlVIT::ThreadLampStatus(LPVOID lpParam)
+{
+	CExternLightControlVIT* pCtrl = static_cast<CExternLightControlVIT*>(lpParam);
+	
+	HANDLE handle[2] = {, m_evtStatus.m_hObject };
+
+	while (TRUE)
+	{
+		DWORD dwResult = WaitForMultipleObjects(2, , FALSE, INFINITE);
+
+		pCtrl->CheckLampStatus();
+	}
+	AfxEndThread(0);
+
+	return 0;
+}
+
+BOOL CExternLightControlVIT::CheckLampStatus()
+{
+	BYTE OutBuf[10] = { 0 };
+
+	DWORD dwResult = WaitForSingleObject(m_evtStatus.m_hObject, INFINITE);
+
+	if (dwResult == WAIT_OBJECT_0)
+	{
+		CSingleLock lock(&m_sectionCommandSend, TRUE);
+
+		for (int i = 1; i <= 7; i++)
+		{
+			RequestChannelData(OutBuf, i);
+			if (!m_serial.Send(OutBuf, BUFFER_SIZE))
+				return FALSE;
+		}
+
+		RequestChannelTurnAll(OutBuf);
+		if (!m_serial.Send(OutBuf, BUFFER_SIZE))
+			return FALSE;
+	}
+
+	return TRUE;
 }

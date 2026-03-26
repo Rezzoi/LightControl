@@ -29,6 +29,8 @@ protected:
 	virtual BOOL		ReceiveDataProc(LPBYTE lpBuffer, int nSize);
 
 protected:
+	static UINT			ThreadLampStatus(LPVOID lpParam);
+	BOOL				CheckLampStatus();
 	int					ConvertToHexData(CString strValue);
 	BOOL				Initialize();
 	int					SetLightValueOn(LPBYTE lpBuffer, int nChannel, int nValue);
@@ -47,7 +49,6 @@ protected:
 	CString				BufferToStatusString(LPBYTE lpBuffer, BYTE dataHigh, BYTE dataLow);
 
 protected:
-	//BYTE				m_lpReadBuffer[10];
 	INT					m_nResvLightValue;
 	int					m_nStartIdx;
 	int					m_nRecvIdx;
@@ -55,4 +56,8 @@ protected:
 	BOOL				m_bAlarmLampOff;
 	BOOL				m_bCtrlTurnOn;
 	CCriticalSection	m_sectionValue;
+	CCriticalSection	m_sectionStatus;
+	CCriticalSection	m_sectionCommandSend;
+	CEvent				m_evtStatus;
+	CEvent				m_evtExit;
 };

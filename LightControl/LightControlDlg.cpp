@@ -66,8 +66,6 @@ void CLightControlDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_PORT, m_comboPort);
 	DDX_Control(pDX, IDC_COMBO_BAUD_RATE, m_comboBaudrate);
 	DDX_Control(pDX, IDC_STATIC_OPEN, m_staticIconOpen);
-	DDX_Control(pDX, IDC_STATIC_FANALARM, m_staticIconFan);
-	DDX_Control(pDX, IDC_STATIC_TEMPALARM, m_staticIconTemp);
 	DDX_Control(pDX, IDC_EDIT_CHANNE1, m_edit1);
 	DDX_Control(pDX, IDC_EDIT_CHENNEL2, m_edit2);
 	DDX_Control(pDX, IDC_EDIT_CHENNEL3, m_edit3);
@@ -78,6 +76,13 @@ void CLightControlDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_EDIT_CHANNEL7, m_edit7);
 	DDX_Control(pDX, IDC_EDIT_LAMP2, m_editLamp2);
 	DDX_Control(pDX, IDC_LIST_COMMAND, m_listCommand);
+	DDX_Control(pDX, IDC_STATIC_ONOFF1, m_staticOnOff1);
+	DDX_Control(pDX, IDC_STATIC_ONOFF2, m_staticOnOff2);
+	DDX_Control(pDX, IDC_STATIC_ONOFF3, m_staticOnOff3);
+	DDX_Control(pDX, IDC_STATIC_ONOFF4, m_staticOnOff4);
+	DDX_Control(pDX, IDC_STATIC_ONOFF5, m_staticOnOff5);
+	DDX_Control(pDX, IDC_STATIC_ONOFF6, m_staticOnOff6);
+	DDX_Control(pDX, IDC_STATIC_ONOFF7, m_staticOnOff7);
 }
 
 BEGIN_MESSAGE_MAP(CLightControlDlg, CDialogEx)
@@ -186,8 +191,6 @@ BOOL CLightControlDlg::OnInitDialog()
 	m_comboBaudrate.SetCurSel(0);
 
 	m_staticIconOpen.SetColor(RGB(250, 0, 0));
-	m_staticIconFan.SetColor(RGB(0, 250, 0));
-	m_staticIconTemp.SetColor(RGB(0, 250, 0));
 
 	m_pLamp = new CExternLightControlVIT();
 	if (m_pLamp)
@@ -303,8 +306,8 @@ void CLightControlDlg::OnBnClickedButtonOpen()
 	if (m_pLamp->OpenControl(m_strPort))
 	{
 		AddMessage(_T("Successfully open."));
-		//m_pLamp->SetFanAlarmOnOff(TRUE);
-		//m_pLamp->SetTemperatureAlarmOnOff(TRUE);
+		m_pLamp->SetFanAlarmOnOff(TRUE);
+		m_pLamp->SetTemperatureAlarmOnOff(TRUE);
 	}
 }
 

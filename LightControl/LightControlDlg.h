@@ -83,9 +83,6 @@ protected:
 
 	CComboBox m_comboPort;
 	CComboBox m_comboBaudrate;
-	CUIStaticColorIcon m_staticIconOpen;
-	CUIStaticColorIcon m_staticIconFan;
-	CUIStaticColorIcon m_staticIconTemp;
 	CListBox m_listCommand;
 	CEdit m_edit1;
 	CEdit m_edit2;
@@ -96,4 +93,12 @@ protected:
 	CEdit m_edit7;
 	CEdit m_editLamp1;
 	CEdit m_editLamp2;
+	CUIStaticColorIcon m_staticIconOpen;
+	CUIStaticColorIcon m_staticOnOff1;
+	CUIStaticColorIcon m_staticOnOff2;
+	CUIStaticColorIcon m_staticOnOff3;
+	CUIStaticColorIcon m_staticOnOff4;
+	CUIStaticColorIcon m_staticOnOff5;
+	CUIStaticColorIcon m_staticOnOff6;
+	CUIStaticColorIcon m_staticOnOff7;
 };
