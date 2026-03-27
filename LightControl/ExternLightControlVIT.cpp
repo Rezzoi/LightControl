@@ -130,12 +130,6 @@ void CExternLightControlVIT::ProcessPacket(string recieve)
 			CSingleLock lock(&m_sectionValue, TRUE);
 			m_arrLightValue[nChannel - 1] = nValue;
 		}
-
-		if (nChannel == 7)
-		{
-			if (m_pParent)
-				PostMessageW(m_pParent->GetSafeHwnd(), WM_UPDATEVIEW, TRUE, NULL);
-		}
 	}
 	else if (recieve[0] == COMMAND_O)
 	{

@@ -74,14 +74,12 @@ public:
 	afx_msg void OnBnClickedButtonRequestOnoff();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg LRESULT OnRecieve(WPARAM wParam, LPARAM lParam);
-	afx_msg LRESULT OnUpdateView(WPARAM wParam, LPARAM lParam);
-
+	
 protected:
 	CLightControlBase* m_pLamp;
 	CString m_strPort;
 	DWORD m_dwBaudrate;
 	BOOL m_bCommOpen;
-	BOOL m_bUpdateView;
 
 	//control
 	CComboBox m_comboPort;

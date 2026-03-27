@@ -60,7 +60,6 @@ CLightControlDlg::CLightControlDlg(CWnd* pParent /*=nullptr*/)
 	, m_pLamp(nullptr)
 	, m_dwBaudrate(9600)
 	, m_bCommOpen(FALSE)
-	, m_bUpdateView(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -125,7 +124,6 @@ BEGIN_MESSAGE_MAP(CLightControlDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_REQUEST_VALUE, &CLightControlDlg::OnBnClickedButtonRequestValue)
 	ON_BN_CLICKED(IDC_BUTTON_REQUEST_ONOFF, &CLightControlDlg::OnBnClickedButtonRequestOnoff)
 	ON_MESSAGE(WM_RECIEVE, &CLightControlDlg::OnRecieve)
-	ON_MESSAGE(WM_UPDATEVIEW, &CLightControlDlg::OnUpdateView)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
@@ -319,7 +317,6 @@ void CLightControlDlg::OnBnClickedButtonOpen()
 		AddMessage(_T("Successfully open."));
 		m_pLamp->SetFanAlarmOnOff(TRUE);
 		m_pLamp->SetTemperatureAlarmOnOff(TRUE);
-		m_bUpdateView = TRUE;
 	}
 }
 
@@ -385,7 +382,6 @@ void CLightControlDlg::OnBnClickedButtonSetlamp1()
 	m_pLamp->SetLightControlValue(1, _ttoi(strValue));
 	m_pLamp->SetLightControlValue(2, _ttoi(strValue));
 	m_pLamp->SetLightControlValue(3, _ttoi(strValue));
-	m_bUpdateView = TRUE;
 }
 
 void CLightControlDlg::OnBnClickedButtonSet4()
@@ -439,7 +435,6 @@ void CLightControlDlg::OnBnClickedButtonSetlamp2()
 	m_pLamp->SetLightControlValue(5, _ttoi(strValue));
 	m_pLamp->SetLightControlValue(6, _ttoi(strValue));
 	m_pLamp->SetLightControlValue(7, _ttoi(strValue));
-	m_bUpdateView = TRUE;
 }
 
 void CLightControlDlg::OnBnClickedButtonOn1()
@@ -644,28 +639,6 @@ LRESULT CLightControlDlg::OnRecieve(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-LRESULT CLightControlDlg::OnUpdateView(WPARAM wParam, LPARAM lParam)
-{
-	if (!m_bUpdateView)
-		return -1;
-
-	BOOL bResult = (BOOL)wParam;
-	if (bResult)
-	{
-		Sleep(200);
-		for (int i = 0; i < 7; i++)
-		{
-			CString strValue;
-			strValue.Format(_T("%d"), m_pLamp->GetLightControlValue(i + 1));
-			m_edit[i].SetWindowTextW(strValue);
-		}
-
-		m_bUpdateView = FALSE;
-	}
-
-	return 0;
-}
-
 void CLightControlDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	switch (nIDEvent)
@@ -675,6 +648,7 @@ void CLightControlDlg::OnTimer(UINT_PTR nIDEvent)
 		if (!m_pLamp)
 			return;
 
+		//open status
 		BOOL bOpen = m_pLamp->IsConnect();
 		if (bOpen != m_bCommOpen)
 		{
@@ -685,16 +659,7 @@ void CLightControlDlg::OnTimer(UINT_PTR nIDEvent)
 				m_staticIconOpen.SetColor(COLOR_RED);
 		}
 
-		UINT nID = IDC_STATIC_VALUE1;
-		for (int i = 1; i <= 7; i++)
-		{
-			CString strValue;
-			strValue.Format(_T("%d"), m_pLamp->GetLightControlValue(i));
-			if (GetDlgItem(nID))
-				GetDlgItem(nID)->SetWindowTextW(strValue);
-			nID++;
-		}
-
+		//on off status
 		for (int i = 1; i <= 7; i++)
 		{
 			BOOL bOn = m_pLamp->GetLightOnStatus(i);
@@ -702,6 +667,28 @@ void CLightControlDlg::OnTimer(UINT_PTR nIDEvent)
 				m_staticOnOff[i - 1].SetColor(COLOR_GREEN);
 			else
 				m_staticOnOff[i - 1].SetColor(COLOR_GRAY);
+		}
+
+		//value status
+		UINT nID = IDC_STATIC_VALUE1;
+		for (int i = 1; i <= 7; i++)
+		{
+			CString strValue;
+			if (GetDlgItem(nID))
+				GetDlgItem(nID)->GetWindowTextW(strValue);
+
+			int nCurValue = _ttoi(strValue);
+			int nValue = m_pLamp->GetLightControlValue(i);
+			if (nCurValue != nValue)
+			{
+				strValue.Format(_T("%d"), nValue);
+				if (GetDlgItem(nID))
+					GetDlgItem(nID)->SetWindowTextW(strValue);
+
+				m_edit[i - 1].SetWindowTextW(strValue);
+			}
+
+			nID++;
 		}
 	}
 		break;
