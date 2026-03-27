@@ -10,14 +10,16 @@
 #define IDC_COMBO_PORT                  1000
 #define IDC_COMBO_BAUD_RATE             1001
 #define IDC_BUTTON_OPEN                 1002
+#define IDC_EDIT_CHANNEL1               1003
+#define IDC_EDIT_CHENNEL2               1004
+#define IDC_EDIT_CHENNEL3               1005
+#define IDC_EDIT_CHANNEL4               1006
+#define IDC_EDIT_CHENNEL5               1007
+#define IDC_EDIT_CHENNEL6               1008
+#define IDC_EDIT_CHANNEL7               1009
 #define IDC_STATIC_OPEN                 1013
 #define IDC_STATIC_FANALARM             1014
-#define IDC_STATIC_ONOFF1               1014
 #define IDC_STATIC_TEMPALARM            1015
-#define IDC_STATIC_ONOFF2               1015
-#define IDC_EDIT_CHANNE1                1016
-#define IDC_EDIT_CHENNEL2               1017
-#define IDC_EDIT_CHENNEL3               1018
 #define IDC_BUTTON_SET1                 1019
 #define IDC_BUTTON_SET2                 1020
 #define IDC_BUTTON_SET3                 1021
@@ -27,7 +29,6 @@
 #define IDC_BUTTON_ON3                  1025
 #define IDC_BUTTON_OFF2                 1026
 #define IDC_BUTTON_OFF3                 1027
-#define IDC_STATIC_ONOFF3               1028
 #define IDC_STATIC_VALUE1               1029
 #define IDC_STATIC_VALUE2               1030
 #define IDC_STATIC_VALUE3               1031
@@ -35,14 +36,9 @@
 #define IDC_STATIC_VALUE5               1033
 #define IDC_STATIC_VALUE6               1034
 #define IDC_STATIC_VALUE7               1035
-#define IDC_STATIC_ONOFF4               1036
 #define IDC_LIST_COMMAND                1037
 #define IDC_BUTTON_REQUEST_ONOFF        1038
 #define IDC_BUTTON_REQUEST_VALUE        1039
-#define IDC_STATIC_ONOFF5               1040
-#define IDC_EDIT_CHANNEL4               1041
-#define IDC_EDIT_CHENNEL5               1042
-#define IDC_EDIT_CHENNEL6               1043
 #define IDC_BUTTON_SET4                 1044
 #define IDC_BUTTON_SET5                 1045
 #define IDC_BUTTON_SET6                 1046
@@ -52,10 +48,6 @@
 #define IDC_BUTTON_ON6                  1050
 #define IDC_BUTTON_OFF5                 1051
 #define IDC_BUTTON_OFF6                 1052
-#define IDC_STATIC_ONOFF6               1053
-#define IDC_STATIC_OPEN8                1054
-#define IDC_STATIC_ONOFF7               1054
-#define IDC_EDIT_CHANNEL7               1055
 #define IDC_BUTTON_SET7                 1056
 #define IDC_BUTTON_ON7                  1057
 #define IDC_BUTTON_OFF7                 1058
@@ -67,6 +59,13 @@
 #define IDC_BUTTON_SETLAMP2             1064
 #define IDC_BUTTON_ONLAMP2              1065
 #define IDC_BUTTON_OFFLAMP2             1066
+#define IDC_STATIC_ONOFF1               1067
+#define IDC_STATIC_ONOFF2               1068
+#define IDC_STATIC_ONOFF3               1069
+#define IDC_STATIC_ONOFF4               1070
+#define IDC_STATIC_ONOFF5               1071
+#define IDC_STATIC_ONOFF6               1072
+#define IDC_STATIC_ONOFF7               1073
 
 // Next default values for new objects
 // 

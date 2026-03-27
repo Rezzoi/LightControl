@@ -41,6 +41,7 @@ CExternLightControlVIT::CExternLightControlVIT(void)
 
 CExternLightControlVIT::~CExternLightControlVIT(void)
 {
+	m_evtExit.SetEvent();
 }
 
 BOOL CExternLightControlVIT::OpenControl(CString strPort, DWORD dwBaudrate)
@@ -48,11 +49,8 @@ BOOL CExternLightControlVIT::OpenControl(CString strPort, DWORD dwBaudrate)
 	if (CLightControlBase::OpenControl(strPort))
 	{
 		m_serial.SetInterface(static_cast<ISerial2Lamp*>(this));
-
-
-
-
-
+		AfxBeginThread(ThreadLampStatus, this);
+		m_evtStatus.SetEvent();
 		return TRUE;
 	}
 
@@ -70,23 +68,31 @@ BOOL CExternLightControlVIT::SetLightControlValue( int nChannel, int nValue )
 	if (m_pL2M)
 		m_pL2M->SendCommand(strcomm);
 
+	CSingleLock lock(&m_sectionCommandSend, TRUE);
 	if(!m_serial.Send(OutBuf, nSize))
 		return FALSE;	
 	
-	CSingleLock lock(&m_sectionValue, TRUE);
-	m_arrLightValue[nChannel - 1] = nValue;
+	m_evtStatus.SetEvent();
+
 	return TRUE;
 }
 
 int CExternLightControlVIT::GetLightControlValue( int nChannel )
 {
+	if (nChannel < 1 || nChannel > 16)
+		return -1;
+
 	CSingleLock lock(&m_sectionValue, TRUE);
 	return m_arrLightValue[nChannel - 1];
 }
 
 BOOL CExternLightControlVIT::GetLightOnStatus( int nChannel )
 {
-	return m_arrLampOn[nChannel];
+	if (nChannel < 1 || nChannel > 16)
+		return -1;
+
+	CSingleLock lock(&m_sectionStatus, TRUE);
+	return m_arrLampOn[nChannel - 1];
 }
 
 BOOL CExternLightControlVIT::IsUsingLightLamp( int nChannel )
@@ -130,6 +136,8 @@ void CExternLightControlVIT::ProcessPacket(string recieve)
 		BYTE nChannelHigh = recieve[3];
 		BYTE nChannelLow = recieve[4];
 
+		CSingleLock lock(&m_sectionStatus, TRUE);
+
 		for (int i = 0; i < 8; ++i)
 		{
 			BOOL bOn = (nChannelLow >> i) & 1;
@@ -149,11 +157,6 @@ void CExternLightControlVIT::ProcessPacket(string recieve)
 	*pMsg = strComm;
 	if (m_pParent)
 		PostMessageW(m_pParent->GetSafeHwnd(), WM_RECIEVE, NULL, (LPARAM)pMsg);
-}
-
-BOOL CExternLightControlVIT::CheckLampStatus()
-{
-	return TRUE;
 }
 
 int CExternLightControlVIT::ConvertToHexData(CString strValue)
@@ -176,11 +179,6 @@ int CExternLightControlVIT::ConvertToHexData(CString strValue)
 	}
 
 	return nValue;
-}
-
-BOOL CExternLightControlVIT::ReceiveDataProc(LPBYTE lpBuffer, int nSize)
-{
-	return TRUE;
 }
 
 BOOL CExternLightControlVIT::Initialize()
@@ -229,7 +227,10 @@ void CExternLightControlVIT::LightOnOff(int nChannel, BOOL bOn)
 	else
 		SetSingleLightTurnOff(OutBuf, nChannel);
 	
+	CSingleLock lock(&m_sectionCommandSend, TRUE);
 	m_serial.Send(OutBuf, BUFFER_SIZE);
+
+	m_evtStatus.SetEvent();
 }
 
 void CExternLightControlVIT::LightOnOff(vector<int> vcChannel, BOOL bOn)
@@ -260,7 +261,10 @@ void CExternLightControlVIT::LightOnOff(vector<int> vcChannel, BOOL bOn)
 	else
 		MakeInstruction(OutBuf, COMMAND_O, COMMAND_F, COMMAND_F, dataHight, dataLow);
 
+	CSingleLock lock(&m_sectionCommandSend, TRUE);
 	m_serial.Send(OutBuf, BUFFER_SIZE);
+
+	m_evtStatus.SetEvent();
 
 	if (m_pL2M)
 	{
@@ -273,6 +277,8 @@ void CExternLightControlVIT::RequestValue(int nChannel)
 {
 	BYTE OutBuf[10];
 	RequestChannelData(OutBuf, nChannel);
+
+	CSingleLock lock(&m_sectionCommandSend, TRUE);
 	m_serial.Send(OutBuf, BUFFER_SIZE);
 
 	if (m_pL2M)
@@ -286,6 +292,8 @@ void CExternLightControlVIT::RequestOnOff()
 {
 	BYTE OutBuf[10];
 	RequestChannelTurnAll(OutBuf);
+
+	CSingleLock lock(&m_sectionCommandSend, TRUE);
 	m_serial.Send(OutBuf, BUFFER_SIZE);
 
 	if (m_pL2M)
@@ -572,15 +580,21 @@ CString CExternLightControlVIT::BufferToStatusString(LPBYTE lpBuffer, BYTE dataH
 UINT CExternLightControlVIT::ThreadLampStatus(LPVOID lpParam)
 {
 	CExternLightControlVIT* pCtrl = static_cast<CExternLightControlVIT*>(lpParam);
+	if (!pCtrl)
+		return 0;
 	
-	HANDLE handle[2] = {, m_evtStatus.m_hObject };
+	HANDLE handle[2] = { pCtrl->m_evtExit.m_hObject , pCtrl->m_evtStatus.m_hObject };
 
 	while (TRUE)
 	{
-		DWORD dwResult = WaitForMultipleObjects(2, , FALSE, INFINITE);
+		DWORD dwResult = WaitForMultipleObjects(2, handle, FALSE, INFINITE);
 
-		pCtrl->CheckLampStatus();
+		if (dwResult == WAIT_OBJECT_0)
+			break;
+		else if (dwResult == WAIT_OBJECT_0 + 1)
+			pCtrl->CheckLampStatus();
 	}
+
 	AfxEndThread(0);
 
 	return 0;

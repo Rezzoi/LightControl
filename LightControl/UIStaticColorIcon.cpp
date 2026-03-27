@@ -14,7 +14,7 @@ IMPLEMENT_DYNAMIC(CUIStaticColorIcon, CStatic)
 
 CUIStaticColorIcon::CUIStaticColorIcon()
 {
-	m_colorBack = RGB(15, 15, 15);
+	m_colorBack = RGB(50, 50, 50);
 	m_brBack.CreateSolidBrush(m_colorBack);
 }
 

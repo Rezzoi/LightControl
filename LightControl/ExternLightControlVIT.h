@@ -26,11 +26,9 @@ public:
 
 protected:
 	virtual BOOL		CheckLampStatus();
-	virtual BOOL		ReceiveDataProc(LPBYTE lpBuffer, int nSize);
 
 protected:
 	static UINT			ThreadLampStatus(LPVOID lpParam);
-	BOOL				CheckLampStatus();
 	int					ConvertToHexData(CString strValue);
 	BOOL				Initialize();
 	int					SetLightValueOn(LPBYTE lpBuffer, int nChannel, int nValue);

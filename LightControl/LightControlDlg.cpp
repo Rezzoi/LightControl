@@ -9,6 +9,11 @@
 #include "afxdialogex.h"
 #include "ExternLightControlVIT.h"
 
+#define COLOR_RED			RGB(250, 0, 0)
+#define COLOR_GREEN			RGB(0, 250, 0)
+#define COLOR_GRAY			RGB(50, 50, 50)
+
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -66,23 +71,23 @@ void CLightControlDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_COMBO_PORT, m_comboPort);
 	DDX_Control(pDX, IDC_COMBO_BAUD_RATE, m_comboBaudrate);
 	DDX_Control(pDX, IDC_STATIC_OPEN, m_staticIconOpen);
-	DDX_Control(pDX, IDC_EDIT_CHANNE1, m_edit1);
+	DDX_Control(pDX, IDC_EDIT_LAMP1, m_editLamp1);
+	DDX_Control(pDX, IDC_EDIT_LAMP2, m_editLamp2);
+	DDX_Control(pDX, IDC_LIST_COMMAND, m_listCommand);
+	DDX_Control(pDX, IDC_STATIC_ONOFF1, m_staticOnOff[0]);
+	DDX_Control(pDX, IDC_STATIC_ONOFF2, m_staticOnOff[1]);
+	DDX_Control(pDX, IDC_STATIC_ONOFF3, m_staticOnOff[2]);
+	DDX_Control(pDX, IDC_STATIC_ONOFF4, m_staticOnOff[3]);
+	DDX_Control(pDX, IDC_STATIC_ONOFF5, m_staticOnOff[4]);
+	DDX_Control(pDX, IDC_STATIC_ONOFF6, m_staticOnOff[5]);
+	DDX_Control(pDX, IDC_STATIC_ONOFF7, m_staticOnOff[6]);
+	DDX_Control(pDX, IDC_EDIT_CHANNEL1, m_edit1);
 	DDX_Control(pDX, IDC_EDIT_CHENNEL2, m_edit2);
 	DDX_Control(pDX, IDC_EDIT_CHENNEL3, m_edit3);
-	DDX_Control(pDX, IDC_EDIT_LAMP1, m_editLamp1);
 	DDX_Control(pDX, IDC_EDIT_CHANNEL4, m_edit4);
 	DDX_Control(pDX, IDC_EDIT_CHENNEL5, m_edit5);
 	DDX_Control(pDX, IDC_EDIT_CHENNEL6, m_edit6);
 	DDX_Control(pDX, IDC_EDIT_CHANNEL7, m_edit7);
-	DDX_Control(pDX, IDC_EDIT_LAMP2, m_editLamp2);
-	DDX_Control(pDX, IDC_LIST_COMMAND, m_listCommand);
-	DDX_Control(pDX, IDC_STATIC_ONOFF1, m_staticOnOff1);
-	DDX_Control(pDX, IDC_STATIC_ONOFF2, m_staticOnOff2);
-	DDX_Control(pDX, IDC_STATIC_ONOFF3, m_staticOnOff3);
-	DDX_Control(pDX, IDC_STATIC_ONOFF4, m_staticOnOff4);
-	DDX_Control(pDX, IDC_STATIC_ONOFF5, m_staticOnOff5);
-	DDX_Control(pDX, IDC_STATIC_ONOFF6, m_staticOnOff6);
-	DDX_Control(pDX, IDC_STATIC_ONOFF7, m_staticOnOff7);
 }
 
 BEGIN_MESSAGE_MAP(CLightControlDlg, CDialogEx)
@@ -190,7 +195,15 @@ BOOL CLightControlDlg::OnInitDialog()
 	m_dwBaudrate = (DWORD)_ttoi(strArr.GetAt(0));
 	m_comboBaudrate.SetCurSel(0);
 
-	m_staticIconOpen.SetColor(RGB(250, 0, 0));
+	m_staticIconOpen.SetColor(COLOR_RED);
+
+	UINT nID = IDC_EDIT_CHANNEL1;
+	for (int i = 1; i <= 7; i++)
+	{
+		if (GetDlgItem(nID))
+			GetDlgItem(nID)->SetWindowTextW(_T("0"));
+		nID++;
+	}
 
 	m_pLamp = new CExternLightControlVIT();
 	if (m_pLamp)
@@ -308,6 +321,16 @@ void CLightControlDlg::OnBnClickedButtonOpen()
 		AddMessage(_T("Successfully open."));
 		m_pLamp->SetFanAlarmOnOff(TRUE);
 		m_pLamp->SetTemperatureAlarmOnOff(TRUE);
+	}
+
+	UINT nID = IDC_EDIT_CHANNEL1;
+	for (int i = 1; i <= 7; i++)
+	{
+		CString strValue;
+		strValue.Format(_T("%d"), m_pLamp->GetLightControlValue(i));
+		if (GetDlgItem(nID))
+			GetDlgItem(nID)->SetWindowTextW(strValue);
+		nID++;
 	}
 }
 
@@ -644,9 +667,9 @@ void CLightControlDlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			m_bCommOpen = bOpen;
 			if (m_bCommOpen)
-				m_staticIconOpen.SetColor(RGB(0, 250, 0));
+				m_staticIconOpen.SetColor(COLOR_GREEN);
 			else 
-				m_staticIconOpen.SetColor(RGB(250, 0, 0));
+				m_staticIconOpen.SetColor(COLOR_RED);
 		}
 
 		UINT nID = IDC_STATIC_VALUE1;
@@ -657,6 +680,16 @@ void CLightControlDlg::OnTimer(UINT_PTR nIDEvent)
 			if (GetDlgItem(nID))
 				GetDlgItem(nID)->SetWindowTextW(strValue);
 			nID++;
+		}
+
+		nID = IDC_STATIC_ONOFF1;
+		for (int i = 1; i <= 7; i++)
+		{
+			BOOL bOn = m_pLamp->GetLightOnStatus(i);
+			if (bOn)
+				m_staticOnOff[i - 1].SetColor(COLOR_GREEN);
+			else
+				m_staticOnOff[i - 1].SetColor(COLOR_GRAY);
 		}
 	}
 		break;
