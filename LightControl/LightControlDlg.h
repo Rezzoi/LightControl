@@ -30,12 +30,12 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	virtual void OnCancel();
-
 	virtual void SendCommand(CString strCommand) override;
 
 protected:
 	void ReadSerialPort(CStringArray& arrStr);
 	void AddMessage(CString strMsg);
+	int CheckValue(CString strValue);
 
 public:
 	DECLARE_MESSAGE_MAP()

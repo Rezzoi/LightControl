@@ -303,6 +303,21 @@ void CLightControlDlg::AddMessage(CString strMsg)
 	m_listCommand.SetCurSel(nIndex);
 }
 
+int CLightControlDlg::CheckValue(CString strValue)
+{
+	if (strValue.IsEmpty())
+		return -1;
+
+	int nValue = _ttoi(strValue);
+
+	if (nValue < 0)
+		nValue = 0;
+	else if (nValue > 255)
+		nValue = 255;
+
+	return nValue;
+}
+
 void CLightControlDlg::OnBnClickedButtonOpen()
 {
 	if (!m_pLamp)
@@ -349,7 +364,10 @@ void CLightControlDlg::OnBnClickedButtonSet1()
 
 	CString strValue;
 	m_edit[0].GetWindowTextW(strValue);
-	m_pLamp->SetLightControlValue(1, _ttoi(strValue));
+	int nValue = CheckValue(strValue);
+	strValue.Format(_T("%d"), nValue);
+	m_edit[0].SetWindowTextW(strValue);
+	m_pLamp->SetLightControlValue(1, nValue);
 }
 
 void CLightControlDlg::OnBnClickedButtonSet2()
@@ -359,7 +377,10 @@ void CLightControlDlg::OnBnClickedButtonSet2()
 
 	CString strValue;
 	m_edit[1].GetWindowTextW(strValue);
-	m_pLamp->SetLightControlValue(2, _ttoi(strValue));
+	int nValue = CheckValue(strValue);
+	strValue.Format(_T("%d"), nValue);
+	m_edit[1].SetWindowTextW(strValue);
+	m_pLamp->SetLightControlValue(2, nValue);
 }
 
 void CLightControlDlg::OnBnClickedButtonSet3()
@@ -369,7 +390,10 @@ void CLightControlDlg::OnBnClickedButtonSet3()
 
 	CString strValue;
 	m_edit[2].GetWindowTextW(strValue);
-	m_pLamp->SetLightControlValue(3, _ttoi(strValue));
+	int nValue = CheckValue(strValue);
+	strValue.Format(_T("%d"), nValue);
+	m_edit[2].SetWindowTextW(strValue);
+	m_pLamp->SetLightControlValue(3, nValue);
 }
 
 void CLightControlDlg::OnBnClickedButtonSetlamp1()
@@ -379,9 +403,12 @@ void CLightControlDlg::OnBnClickedButtonSetlamp1()
 
 	CString strValue;
 	m_editLamp1.GetWindowTextW(strValue);
-	m_pLamp->SetLightControlValue(1, _ttoi(strValue));
-	m_pLamp->SetLightControlValue(2, _ttoi(strValue));
-	m_pLamp->SetLightControlValue(3, _ttoi(strValue));
+	int nValue = CheckValue(strValue);
+	strValue.Format(_T("%d"), nValue);
+	m_editLamp1.SetWindowTextW(strValue);
+	m_pLamp->SetLightControlValue(1, nValue);
+	m_pLamp->SetLightControlValue(2, nValue);
+	m_pLamp->SetLightControlValue(3, nValue);
 }
 
 void CLightControlDlg::OnBnClickedButtonSet4()
@@ -391,7 +418,10 @@ void CLightControlDlg::OnBnClickedButtonSet4()
 
 	CString strValue;
 	m_edit[3].GetWindowTextW(strValue);
-	m_pLamp->SetLightControlValue(4, _ttoi(strValue));
+	int nValue = CheckValue(strValue);
+	strValue.Format(_T("%d"), nValue);
+	m_edit[3].SetWindowTextW(strValue);
+	m_pLamp->SetLightControlValue(4, nValue);
 }
 
 void CLightControlDlg::OnBnClickedButtonSet5()
@@ -401,7 +431,10 @@ void CLightControlDlg::OnBnClickedButtonSet5()
 
 	CString strValue;
 	m_edit[4].GetWindowTextW(strValue);
-	m_pLamp->SetLightControlValue(5, _ttoi(strValue));
+	int nValue = CheckValue(strValue);
+	strValue.Format(_T("%d"), nValue);
+	m_edit[4].SetWindowTextW(strValue);
+	m_pLamp->SetLightControlValue(5, nValue);
 }
 
 void CLightControlDlg::OnBnClickedButtonSet6()
@@ -411,7 +444,10 @@ void CLightControlDlg::OnBnClickedButtonSet6()
 
 	CString strValue;
 	m_edit[5].GetWindowTextW(strValue);
-	m_pLamp->SetLightControlValue(6, _ttoi(strValue));
+	int nValue = CheckValue(strValue);
+	strValue.Format(_T("%d"), nValue);
+	m_edit[5].SetWindowTextW(strValue);
+	m_pLamp->SetLightControlValue(6, nValue);
 }
 
 void CLightControlDlg::OnBnClickedButtonSet7()
@@ -421,7 +457,10 @@ void CLightControlDlg::OnBnClickedButtonSet7()
 
 	CString strValue;
 	m_edit[6].GetWindowTextW(strValue);
-	m_pLamp->SetLightControlValue(7, _ttoi(strValue));
+	int nValue = CheckValue(strValue);
+	strValue.Format(_T("%d"), nValue);
+	m_edit[6].SetWindowTextW(strValue);
+	m_pLamp->SetLightControlValue(7, nValue);
 }
 
 void CLightControlDlg::OnBnClickedButtonSetlamp2()
@@ -431,10 +470,13 @@ void CLightControlDlg::OnBnClickedButtonSetlamp2()
 
 	CString strValue;
 	m_editLamp2.GetWindowTextW(strValue);
-	m_pLamp->SetLightControlValue(4, _ttoi(strValue));
-	m_pLamp->SetLightControlValue(5, _ttoi(strValue));
-	m_pLamp->SetLightControlValue(6, _ttoi(strValue));
-	m_pLamp->SetLightControlValue(7, _ttoi(strValue));
+	int nValue = CheckValue(strValue);
+	strValue.Format(_T("%d"), nValue);
+	m_editLamp2.SetWindowTextW(strValue);
+	m_pLamp->SetLightControlValue(4, nValue);
+	m_pLamp->SetLightControlValue(5, nValue);
+	m_pLamp->SetLightControlValue(6, nValue);
+	m_pLamp->SetLightControlValue(7, nValue);
 }
 
 void CLightControlDlg::OnBnClickedButtonOn1()
