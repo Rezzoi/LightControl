@@ -652,12 +652,11 @@ LRESULT CLightControlDlg::OnUpdateView(WPARAM wParam, LPARAM lParam)
 	BOOL bResult = (BOOL)wParam;
 	if (bResult)
 	{
-		TRACE(_T("Set edit ctrl value.\n"));
-
+		Sleep(200);
 		for (int i = 0; i < 7; i++)
 		{
 			CString strValue;
-			strValue.Format(_T("%d"), m_pLamp->GetLightControlValue(i));
+			strValue.Format(_T("%d"), m_pLamp->GetLightControlValue(i + 1));
 			m_edit[i].SetWindowTextW(strValue);
 		}
 
