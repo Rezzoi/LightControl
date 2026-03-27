@@ -212,7 +212,7 @@ BOOL CLightControlDlg::OnInitDialog()
 		m_pLamp->SetParentWnd(this);
 	}
 
-	SetTimer(TIMER_VALUE_MONITOR, 1000, NULL);
+	SetTimer(TIMER_VALUE_MONITOR, 500, NULL);
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -323,6 +323,8 @@ void CLightControlDlg::OnBnClickedButtonOpen()
 		m_pLamp->SetTemperatureAlarmOnOff(TRUE);
 	}
 
+	Sleep(100);
+	TRACE(_T("Set edit ctrl value.\n"));
 	UINT nID = IDC_EDIT_CHANNEL1;
 	for (int i = 1; i <= 7; i++)
 	{

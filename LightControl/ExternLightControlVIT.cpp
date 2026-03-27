@@ -32,8 +32,8 @@ CExternLightControlVIT::CExternLightControlVIT(void)
 	, m_nRecvIdx(0)
 	, m_nTemperature(0)
 	, m_bAlarmLampOff(0)
-	, m_evtStatus(FALSE, FALSE)
-	, m_evtExit(FALSE, FALSE)
+	, m_evtStatus(FALSE, TRUE)
+	, m_evtExit(FALSE, TRUE)
 {
 	m_bCtrlTurnOn = FALSE;
 }
@@ -111,6 +111,7 @@ BOOL CExternLightControlVIT::IsUsingLightLamp( int nChannel )
 
 void CExternLightControlVIT::ProcessPacket(string recieve)
 {
+	TRACE(_T("Receive data\n"));
 	CString strComm(recieve.c_str(), 5);
 
 	int nSize = recieve.size();
@@ -592,7 +593,10 @@ UINT CExternLightControlVIT::ThreadLampStatus(LPVOID lpParam)
 		if (dwResult == WAIT_OBJECT_0)
 			break;
 		else if (dwResult == WAIT_OBJECT_0 + 1)
+		{
+			pCtrl->m_evtStatus.ResetEvent();
 			pCtrl->CheckLampStatus();
+		}
 	}
 
 	AfxEndThread(0);
@@ -603,24 +607,20 @@ UINT CExternLightControlVIT::ThreadLampStatus(LPVOID lpParam)
 BOOL CExternLightControlVIT::CheckLampStatus()
 {
 	BYTE OutBuf[10] = { 0 };
+	
+	TRACE(_T("Send request command.\n"));
+	CSingleLock lock(&m_sectionCommandSend, TRUE);
 
-	DWORD dwResult = WaitForSingleObject(m_evtStatus.m_hObject, INFINITE);
-
-	if (dwResult == WAIT_OBJECT_0)
+	for (int i = 1; i <= 7; i++)
 	{
-		CSingleLock lock(&m_sectionCommandSend, TRUE);
-
-		for (int i = 1; i <= 7; i++)
-		{
-			RequestChannelData(OutBuf, i);
-			if (!m_serial.Send(OutBuf, BUFFER_SIZE))
-				return FALSE;
-		}
-
-		RequestChannelTurnAll(OutBuf);
+		RequestChannelData(OutBuf, i);
 		if (!m_serial.Send(OutBuf, BUFFER_SIZE))
 			return FALSE;
 	}
+
+	RequestChannelTurnAll(OutBuf);
+	if (!m_serial.Send(OutBuf, BUFFER_SIZE))
+		return FALSE;
 
 	return TRUE;
 }

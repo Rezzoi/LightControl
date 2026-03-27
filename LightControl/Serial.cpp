@@ -166,8 +166,6 @@ int CSerial::Read(BYTE* pBuffer, DWORD bufferSize, DWORD timeout)
     }
 
     CString str((LPCSTR)pBuffer, dwRead);
-    TRACE(_T("Read file: Buffer:%s, Size:%d\n"), str, dwRead);
-
     return (int)dwRead;
 }
 
