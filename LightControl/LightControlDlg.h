@@ -72,15 +72,18 @@ public:
 	afx_msg void OnBnClickedButtonOfflamp2();
 	afx_msg void OnBnClickedButtonRequestValue();
 	afx_msg void OnBnClickedButtonRequestOnoff();
-	afx_msg LRESULT OnRecieve(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg LRESULT OnRecieve(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnUpdateView(WPARAM wParam, LPARAM lParam);
 
 protected:
 	CLightControlBase* m_pLamp;
 	CString m_strPort;
 	DWORD m_dwBaudrate;
 	BOOL m_bCommOpen;
+	BOOL m_bUpdateView;
 
+	//control
 	CComboBox m_comboPort;
 	CComboBox m_comboBaudrate;
 	CListBox m_listCommand;
@@ -88,11 +91,5 @@ protected:
 	CEdit m_editLamp2;
 	CUIStaticColorIcon m_staticIconOpen;
 	CUIStaticColorIcon m_staticOnOff[7];
-	CEdit m_edit1;
-	CEdit m_edit2;
-	CEdit m_edit3;
-	CEdit m_edit4;
-	CEdit m_edit5;
-	CEdit m_edit6;
-	CEdit m_edit7;
+	CEdit m_edit[7];
 };

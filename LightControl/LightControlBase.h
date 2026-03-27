@@ -2,6 +2,8 @@
 #include "Serial.h"
 
 #define WM_RECIEVE				(WM_APP + 100)
+#define WM_UPDATEVIEW			(WM_APP + 101)
+
 #define LAMP_MAX_COUNT			16
 
 class ILamp2Main

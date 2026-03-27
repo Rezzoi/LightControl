@@ -32,8 +32,8 @@ CExternLightControlVIT::CExternLightControlVIT(void)
 	, m_nRecvIdx(0)
 	, m_nTemperature(0)
 	, m_bAlarmLampOff(0)
-	, m_evtStatus(FALSE, TRUE)
-	, m_evtExit(FALSE, TRUE)
+	, m_evtStatus(FALSE, FALSE)
+	, m_evtExit(FALSE, FALSE)
 {
 	m_bCtrlTurnOn = FALSE;
 }
@@ -131,6 +131,11 @@ void CExternLightControlVIT::ProcessPacket(string recieve)
 			m_arrLightValue[nChannel - 1] = nValue;
 		}
 
+		if (nChannel == 7)
+		{
+			if (m_pParent)
+				PostMessageW(m_pParent->GetSafeHwnd(), WM_UPDATEVIEW, TRUE, NULL);
+		}
 	}
 	else if (recieve[0] == COMMAND_O)
 	{

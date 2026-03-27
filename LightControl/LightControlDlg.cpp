@@ -13,7 +13,6 @@
 #define COLOR_GREEN			RGB(0, 250, 0)
 #define COLOR_GRAY			RGB(50, 50, 50)
 
-
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -61,6 +60,7 @@ CLightControlDlg::CLightControlDlg(CWnd* pParent /*=nullptr*/)
 	, m_pLamp(nullptr)
 	, m_dwBaudrate(9600)
 	, m_bCommOpen(FALSE)
+	, m_bUpdateView(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -81,13 +81,13 @@ void CLightControlDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_ONOFF5, m_staticOnOff[4]);
 	DDX_Control(pDX, IDC_STATIC_ONOFF6, m_staticOnOff[5]);
 	DDX_Control(pDX, IDC_STATIC_ONOFF7, m_staticOnOff[6]);
-	DDX_Control(pDX, IDC_EDIT_CHANNEL1, m_edit1);
-	DDX_Control(pDX, IDC_EDIT_CHENNEL2, m_edit2);
-	DDX_Control(pDX, IDC_EDIT_CHENNEL3, m_edit3);
-	DDX_Control(pDX, IDC_EDIT_CHANNEL4, m_edit4);
-	DDX_Control(pDX, IDC_EDIT_CHENNEL5, m_edit5);
-	DDX_Control(pDX, IDC_EDIT_CHENNEL6, m_edit6);
-	DDX_Control(pDX, IDC_EDIT_CHANNEL7, m_edit7);
+	DDX_Control(pDX, IDC_EDIT_CHANNEL1, m_edit[0]);
+	DDX_Control(pDX, IDC_EDIT_CHENNEL2, m_edit[1]);
+	DDX_Control(pDX, IDC_EDIT_CHENNEL3, m_edit[2]);
+	DDX_Control(pDX, IDC_EDIT_CHANNEL4, m_edit[3]);
+	DDX_Control(pDX, IDC_EDIT_CHENNEL5, m_edit[4]);
+	DDX_Control(pDX, IDC_EDIT_CHENNEL6, m_edit[5]);
+	DDX_Control(pDX, IDC_EDIT_CHANNEL7, m_edit[6]);
 }
 
 BEGIN_MESSAGE_MAP(CLightControlDlg, CDialogEx)
@@ -125,6 +125,7 @@ BEGIN_MESSAGE_MAP(CLightControlDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_REQUEST_VALUE, &CLightControlDlg::OnBnClickedButtonRequestValue)
 	ON_BN_CLICKED(IDC_BUTTON_REQUEST_ONOFF, &CLightControlDlg::OnBnClickedButtonRequestOnoff)
 	ON_MESSAGE(WM_RECIEVE, &CLightControlDlg::OnRecieve)
+	ON_MESSAGE(WM_UPDATEVIEW, &CLightControlDlg::OnUpdateView)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
@@ -197,12 +198,9 @@ BOOL CLightControlDlg::OnInitDialog()
 
 	m_staticIconOpen.SetColor(COLOR_RED);
 
-	UINT nID = IDC_EDIT_CHANNEL1;
-	for (int i = 1; i <= 7; i++)
+	for (int i = 0; i < 7; i++)
 	{
-		if (GetDlgItem(nID))
-			GetDlgItem(nID)->SetWindowTextW(_T("0"));
-		nID++;
+		m_edit[i].SetWindowTextW(_T("0"));
 	}
 
 	m_pLamp = new CExternLightControlVIT();
@@ -321,18 +319,7 @@ void CLightControlDlg::OnBnClickedButtonOpen()
 		AddMessage(_T("Successfully open."));
 		m_pLamp->SetFanAlarmOnOff(TRUE);
 		m_pLamp->SetTemperatureAlarmOnOff(TRUE);
-	}
-
-	Sleep(100);
-	TRACE(_T("Set edit ctrl value.\n"));
-	UINT nID = IDC_EDIT_CHANNEL1;
-	for (int i = 1; i <= 7; i++)
-	{
-		CString strValue;
-		strValue.Format(_T("%d"), m_pLamp->GetLightControlValue(i));
-		if (GetDlgItem(nID))
-			GetDlgItem(nID)->SetWindowTextW(strValue);
-		nID++;
+		m_bUpdateView = TRUE;
 	}
 }
 
@@ -364,7 +351,7 @@ void CLightControlDlg::OnBnClickedButtonSet1()
 		return;
 
 	CString strValue;
-	m_edit1.GetWindowTextW(strValue);
+	m_edit[0].GetWindowTextW(strValue);
 	m_pLamp->SetLightControlValue(1, _ttoi(strValue));
 }
 
@@ -374,7 +361,7 @@ void CLightControlDlg::OnBnClickedButtonSet2()
 		return;
 
 	CString strValue;
-	m_edit2.GetWindowTextW(strValue);
+	m_edit[1].GetWindowTextW(strValue);
 	m_pLamp->SetLightControlValue(2, _ttoi(strValue));
 }
 
@@ -384,7 +371,7 @@ void CLightControlDlg::OnBnClickedButtonSet3()
 		return;
 
 	CString strValue;
-	m_edit3.GetWindowTextW(strValue);
+	m_edit[2].GetWindowTextW(strValue);
 	m_pLamp->SetLightControlValue(3, _ttoi(strValue));
 }
 
@@ -398,6 +385,7 @@ void CLightControlDlg::OnBnClickedButtonSetlamp1()
 	m_pLamp->SetLightControlValue(1, _ttoi(strValue));
 	m_pLamp->SetLightControlValue(2, _ttoi(strValue));
 	m_pLamp->SetLightControlValue(3, _ttoi(strValue));
+	m_bUpdateView = TRUE;
 }
 
 void CLightControlDlg::OnBnClickedButtonSet4()
@@ -406,7 +394,7 @@ void CLightControlDlg::OnBnClickedButtonSet4()
 		return;
 
 	CString strValue;
-	m_edit4.GetWindowTextW(strValue);
+	m_edit[3].GetWindowTextW(strValue);
 	m_pLamp->SetLightControlValue(4, _ttoi(strValue));
 }
 
@@ -416,7 +404,7 @@ void CLightControlDlg::OnBnClickedButtonSet5()
 		return;
 
 	CString strValue;
-	m_edit5.GetWindowTextW(strValue);
+	m_edit[4].GetWindowTextW(strValue);
 	m_pLamp->SetLightControlValue(5, _ttoi(strValue));
 }
 
@@ -426,7 +414,7 @@ void CLightControlDlg::OnBnClickedButtonSet6()
 		return;
 
 	CString strValue;
-	m_edit6.GetWindowTextW(strValue);
+	m_edit[5].GetWindowTextW(strValue);
 	m_pLamp->SetLightControlValue(6, _ttoi(strValue));
 }
 
@@ -436,7 +424,7 @@ void CLightControlDlg::OnBnClickedButtonSet7()
 		return;
 
 	CString strValue;
-	m_edit7.GetWindowTextW(strValue);
+	m_edit[6].GetWindowTextW(strValue);
 	m_pLamp->SetLightControlValue(7, _ttoi(strValue));
 }
 
@@ -451,6 +439,7 @@ void CLightControlDlg::OnBnClickedButtonSetlamp2()
 	m_pLamp->SetLightControlValue(5, _ttoi(strValue));
 	m_pLamp->SetLightControlValue(6, _ttoi(strValue));
 	m_pLamp->SetLightControlValue(7, _ttoi(strValue));
+	m_bUpdateView = TRUE;
 }
 
 void CLightControlDlg::OnBnClickedButtonOn1()
@@ -655,6 +644,29 @@ LRESULT CLightControlDlg::OnRecieve(WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+LRESULT CLightControlDlg::OnUpdateView(WPARAM wParam, LPARAM lParam)
+{
+	if (!m_bUpdateView)
+		return -1;
+
+	BOOL bResult = (BOOL)wParam;
+	if (bResult)
+	{
+		TRACE(_T("Set edit ctrl value.\n"));
+
+		for (int i = 0; i < 7; i++)
+		{
+			CString strValue;
+			strValue.Format(_T("%d"), m_pLamp->GetLightControlValue(i));
+			m_edit[i].SetWindowTextW(strValue);
+		}
+
+		m_bUpdateView = FALSE;
+	}
+
+	return 0;
+}
+
 void CLightControlDlg::OnTimer(UINT_PTR nIDEvent)
 {
 	switch (nIDEvent)
@@ -684,7 +696,6 @@ void CLightControlDlg::OnTimer(UINT_PTR nIDEvent)
 			nID++;
 		}
 
-		nID = IDC_STATIC_ONOFF1;
 		for (int i = 1; i <= 7; i++)
 		{
 			BOOL bOn = m_pLamp->GetLightOnStatus(i);
